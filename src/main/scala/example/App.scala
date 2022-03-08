@@ -38,6 +38,26 @@ object App {
 
         println("50/50 resample using count with diabetes: " + resampledMinority.count())
         println("50/50 resample using count without diabetes: " + resampledMajority.count())
+
+        // Resampling on stroke
+        val strokeOfBadLuck = sc.textFile(dataset).map (it => {
+            it.split(",").map(_.toDouble)
+        }).filter(it => it(6) == 1.0)
+
+        val noStroke = sc.textFile(dataset).map (it => {
+            it.split(",").map(_.toDouble)
+        }).filter(it => it(6) == 0.0)
+
+        val strokeCount = strokeOfBadLuck.count().toInt
+        println("Count with stroke: " + strokeCount)
+        val noStrokeCount = noStroke.count().toInt
+        println("Count without stroke: " + noStrokeCount)
+
+        val resampledStrokeMin = sc.parallelize(noStroke.takeSample(false, strokeCount, 369)).union(strokeOfBadLuck)
+        val resampledStrokeMaj = sc.parallelize(strokeOfBadLuck.takeSample(true, noStrokeCount, 369)).union(noStroke)
+
+        println("50/50 resample using count with stroke: " + resampledStrokeMin.count())
+        println("50/50 resample using count without stroke: " + resampledStrokeMaj.count())
     }
 
 }

@@ -1,11 +1,14 @@
 package example
 
 import org.apache.spark.SparkContext._
+
 import scala.io._
-import org.apache.spark.{ SparkConf, SparkContext }
+import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.rdd._
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
+
+import java.io._
 import scala.collection._
 
 object App {
@@ -38,6 +41,9 @@ object App {
 
         println("50/50 resample using count with diabetes: " + resampledMinority.count())
         println("50/50 resample using count without diabetes: " + resampledMajority.count())
+
+        val pw = new PrintWriter(new File("data/output.csv"))
+        resampledMajority.map(it => it.mkString(",")).collect().foreach(x=> pw.write(x+"\n"))
 
         // Resampling on stroke
         val strokeOfBadLuck = sc.textFile(dataset).map (it => {

@@ -9,10 +9,8 @@ import org.apache.spark.rdd._
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
 
-<<<<<<< HEAD
-=======
+
 import java.io._
->>>>>>> 902ef33ade0c049e511b0c6739da5b9be3f9ab65
 import scala.collection._
 
 object App {
@@ -93,18 +91,27 @@ object App {
             line.split(",")(19).trim.toDouble,
             line.split(",")(20).trim.toDouble,
             line.split(",")(21).trim.toDouble))
+
+        // create list of tuples
+        // sample row: (0,(0.0,List(1.0, 0.0, 1.0, 26.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 3.0, 5.0, 30.0, 0.0, 1.0, 4.0, 6.0, 8.0)))
         val data = target.zip(testDiabetes).zipWithIndex().map({case(x, y) => (y, x)})
+
+        // split data into 80% training and 20% testing
         val (training, test) = data.randomSplit(Array[Double](0.8, 0.2), 369) match {
             case Array(training, test) => (training, test)
         }
+
+        // print out what data looks like before k nearest neighbors
         data.take(5).foreach(println)
 
+        // predicting whether they have diabetes based on other columns
         val actual = target.zipWithIndex().map(x => (x._2, x._1))
         val predicted = getNeighbors(training, test)
 
+        // print accuracy of k nearest neighbors
         println(actual.join(predicted).filter({case (id, (act, pred)) => act == pred}).count.toDouble / test.count.toDouble)
 
-=======
+
         val pw = new PrintWriter(new File("data/output.csv"))
         pw.write(first + "\n")
         resampledMajority.map(it => it.mkString(",")).collect().foreach(x=> pw.write(x+"\n"))
@@ -128,7 +135,7 @@ object App {
 //
 //        println("50/50 resample using count with stroke: " + resampledStrokeMin.count())
 //        println("50/50 resample using count without stroke: " + resampledStrokeMaj.count())
->>>>>>> 902ef33ade0c049e511b0c6739da5b9be3f9ab65
+
     }
 
 }

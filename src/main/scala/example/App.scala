@@ -9,6 +9,10 @@ import org.apache.spark.rdd._
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
 
+<<<<<<< HEAD
+=======
+import java.io._
+>>>>>>> 902ef33ade0c049e511b0c6739da5b9be3f9ab65
 import scala.collection._
 
 object App {
@@ -41,12 +45,16 @@ object App {
         val conf = new SparkConf().setAppName("Project369").setMaster("local[4]")
         val sc = new SparkContext(conf)
 
+        val first = sc.textFile(dataset).first()
+
         // Resampling
-        val hasDiab = sc.textFile(dataset).map (it => {
+        val hasDiab = sc.textFile(dataset).filter(_ != first)
+          .map (it => {
             it.split(",").map(_.toDouble)
         }).filter(it => it(0) == 1.0)
 
-        val noDiab = sc.textFile(dataset).map (it => {
+        val noDiab = sc.textFile(dataset).filter(_ != first)
+          .map (it => {
             it.split(",").map(_.toDouble)
         }).filter(it => it(0) == 0.0)
 
@@ -61,6 +69,7 @@ object App {
         println("50/50 resample using count with diabetes: " + resampledMinority.count())
         println("50/50 resample using count without diabetes: " + resampledMajority.count())
 
+<<<<<<< HEAD
         val target = sc.textFile("src/main/sampleData").map(line => line.split(",")(0).trim.toDouble)
         val testDiabetes = sc.textFile("src/main/sampleData").map(line => List(
             line.split(",")(1).trim.toDouble,
@@ -95,6 +104,31 @@ object App {
 
         println(actual.join(predicted).filter({case (id, (act, pred)) => act == pred}).count.toDouble / test.count.toDouble)
 
+=======
+        val pw = new PrintWriter(new File("data/output.csv"))
+        pw.write(first + "\n")
+        resampledMajority.map(it => it.mkString(",")).collect().foreach(x=> pw.write(x+"\n"))
+
+        // Resampling on stroke
+//        val strokeOfBadLuck = sc.textFile(dataset).map (it => {
+//            it.split(",").map(_.toDouble)
+//        }).filter(it => it(6) == 1.0)
+//
+//        val noStroke = sc.textFile(dataset).map (it => {
+//            it.split(",").map(_.toDouble)
+//        }).filter(it => it(6) == 0.0)
+//
+//        val strokeCount = strokeOfBadLuck.count().toInt
+//        println("Count with stroke: " + strokeCount)
+//        val noStrokeCount = noStroke.count().toInt
+//        println("Count without stroke: " + noStrokeCount)
+//
+//        val resampledStrokeMin = sc.parallelize(noStroke.takeSample(false, strokeCount, 369)).union(strokeOfBadLuck)
+//        val resampledStrokeMaj = sc.parallelize(strokeOfBadLuck.takeSample(true, noStrokeCount, 369)).union(noStroke)
+//
+//        println("50/50 resample using count with stroke: " + resampledStrokeMin.count())
+//        println("50/50 resample using count without stroke: " + resampledStrokeMaj.count())
+>>>>>>> 902ef33ade0c049e511b0c6739da5b9be3f9ab65
     }
 
 }

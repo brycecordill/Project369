@@ -17,6 +17,7 @@ object App {
     // Used in getNeighbors
     private val N = 5
 
+    //private val dataset = "/user/bcordill/input/data"
     private val dataset = "data/diabetes_binary_health_indicators_BRFSS2015.csv"
 
     def computeDistance(row1: List[Double], row2: List[Double]): Double = {
@@ -68,9 +69,11 @@ object App {
         println("50/50 resample using count without diabetes: " + resampledMajority.count())
 
         // RDD Setup (change to commented out version when complete)
-        //val target = sc.textFile(dataset).filter(_ != first)
+        //val target = sc.textFile(dataset).filter(_ != first).map(line => line.split(",")(0).trim.toDouble)
         val target = sc.textFile("src/main/sampleData").map(line => line.split(",")(0).trim.toDouble)
-        //val testDiabetes = sc.textFile(dataset).filter(_ != first)
+//        val testDiabetes = sc.textFile(dataset).filter(_ != first).map(line => {
+//            line.split(",").tail.map(item => item.trim.toDouble).toList
+//        })
         val testDiabetes = sc.textFile("src/main/sampleData").map(line => {
             line.split(",").tail.map(item => item.trim.toDouble).toList
         })

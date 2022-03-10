@@ -18,7 +18,7 @@ object App {
     private val N = 5
 
     //private val dataset = "/user/bcordill/input/data"
-    private val dataset = "data/diabetes_binary_health_indicators_BRFSS2015.csv"
+    private val dataset = "data/5050small.csv"
 
     def computeDistance(row1: List[Double], row2: List[Double]): Double = {
         val distance = row1.zip(row2).map({case(x, y) => math.pow(x - y, 2)})
@@ -69,14 +69,14 @@ object App {
         println("50/50 resample using count without diabetes: " + resampledMajority.count())
 
         // RDD Setup (change to commented out version when complete)
-        //val target = sc.textFile(dataset).filter(_ != first).map(line => line.split(",")(0).trim.toDouble)
-        val target = sc.textFile("src/main/sampleData").map(line => line.split(",")(0).trim.toDouble)
-//        val testDiabetes = sc.textFile(dataset).filter(_ != first).map(line => {
-//            line.split(",").tail.map(item => item.trim.toDouble).toList
-//        })
-        val testDiabetes = sc.textFile("src/main/sampleData").map(line => {
+        val target = sc.textFile(dataset).filter(_ != first).map(line => line.split(",")(0).trim.toDouble)
+//        val target = sc.textFile("src/main/sampleData").map(line => line.split(",")(0).trim.toDouble)
+        val testDiabetes = sc.textFile(dataset).filter(_ != first).map(line => {
             line.split(",").tail.map(item => item.trim.toDouble).toList
         })
+//        val testDiabetes = sc.textFile("src/main/sampleData").map(line => {
+//            line.split(",").tail.map(item => item.trim.toDouble).toList
+//        })
 
         // create list of tuples
         // sample row: (0,(0.0,List(1.0, 0.0, 1.0, 26.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 3.0, 5.0, 30.0, 0.0, 1.0, 4.0, 6.0, 8.0)))

@@ -14,6 +14,8 @@ import java.io._
 import scala.collection._
 
 object App {
+    // Used in getNeighbors
+    private val N = 5
 
     private val dataset = "data/diabetes_binary_health_indicators_BRFSS2015.csv"
 
@@ -45,7 +47,7 @@ object App {
 
         val first = sc.textFile(dataset).first()
 
-        // Resampling
+        // Resampling (not needed?)
         val hasDiab = sc.textFile(dataset).filter(_ != first)
           .map (it => {
             it.split(",").map(_.toDouble)
@@ -61,36 +63,17 @@ object App {
         val noDiabCount = noDiab.count().toInt
         println("Count without diabetes: " + noDiabCount)
 
-        val resampledMinority = sc.parallelize(noDiab.takeSample(false, diabCount, 369)).union(hasDiab)
         val resampledMajority = sc.parallelize(hasDiab.takeSample(true, noDiabCount, 369)).union(noDiab)
 
-        println("50/50 resample using count with diabetes: " + resampledMinority.count())
         println("50/50 resample using count without diabetes: " + resampledMajority.count())
 
-<<<<<<< HEAD
+        // RDD Setup (change to commented out version when complete)
+        //val target = sc.textFile(dataset).filter(_ != first)
         val target = sc.textFile("src/main/sampleData").map(line => line.split(",")(0).trim.toDouble)
-        val testDiabetes = sc.textFile("src/main/sampleData").map(line => List(
-            line.split(",")(1).trim.toDouble,
-            line.split(",")(2).trim.toDouble,
-            line.split(",")(3).trim.toDouble,
-            line.split(",")(4).trim.toDouble,
-            line.split(",")(5).trim.toDouble,
-            line.split(",")(6).trim.toDouble,
-            line.split(",")(7).trim.toDouble,
-            line.split(",")(8).trim.toDouble,
-            line.split(",")(9).trim.toDouble,
-            line.split(",")(10).trim.toDouble,
-            line.split(",")(11).trim.toDouble,
-            line.split(",")(12).trim.toDouble,
-            line.split(",")(13).trim.toDouble,
-            line.split(",")(14).trim.toDouble,
-            line.split(",")(15).trim.toDouble,
-            line.split(",")(16).trim.toDouble,
-            line.split(",")(17).trim.toDouble,
-            line.split(",")(18).trim.toDouble,
-            line.split(",")(19).trim.toDouble,
-            line.split(",")(20).trim.toDouble,
-            line.split(",")(21).trim.toDouble))
+        //val testDiabetes = sc.textFile(dataset).filter(_ != first)
+        val testDiabetes = sc.textFile("src/main/sampleData").map(line => {
+            line.split(",").tail.map(item => item.trim.toDouble).toList
+        })
 
         // create list of tuples
         // sample row: (0,(0.0,List(1.0, 0.0, 1.0, 26.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 3.0, 5.0, 30.0, 0.0, 1.0, 4.0, 6.0, 8.0)))
@@ -111,31 +94,10 @@ object App {
         // print accuracy of k nearest neighbors
         println(actual.join(predicted).filter({case (id, (act, pred)) => act == pred}).count.toDouble / test.count.toDouble)
 
-
+        // Write out everything to an CSV (pointless at the moment)
         val pw = new PrintWriter(new File("data/output.csv"))
         pw.write(first + "\n")
         resampledMajority.map(it => it.mkString(",")).collect().foreach(x=> pw.write(x+"\n"))
-
-        // Resampling on stroke
-//        val strokeOfBadLuck = sc.textFile(dataset).map (it => {
-//            it.split(",").map(_.toDouble)
-//        }).filter(it => it(6) == 1.0)
-//
-//        val noStroke = sc.textFile(dataset).map (it => {
-//            it.split(",").map(_.toDouble)
-//        }).filter(it => it(6) == 0.0)
-//
-//        val strokeCount = strokeOfBadLuck.count().toInt
-//        println("Count with stroke: " + strokeCount)
-//        val noStrokeCount = noStroke.count().toInt
-//        println("Count without stroke: " + noStrokeCount)
-//
-//        val resampledStrokeMin = sc.parallelize(noStroke.takeSample(false, strokeCount, 369)).union(strokeOfBadLuck)
-//        val resampledStrokeMaj = sc.parallelize(strokeOfBadLuck.takeSample(true, noStrokeCount, 369)).union(noStroke)
-//
-//        println("50/50 resample using count with stroke: " + resampledStrokeMin.count())
-//        println("50/50 resample using count without stroke: " + resampledStrokeMaj.count())
-
     }
 
 }

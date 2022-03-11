@@ -46,6 +46,8 @@ object App {
         val conf = new SparkConf().setAppName("Project369").setMaster("local[4]")
         val sc = new SparkContext(conf)
 
+        printProbabilities(sc)
+
         val first = sc.textFile(dataset).first()
 
         // Resampling (not needed?)
@@ -102,5 +104,68 @@ object App {
         pw.write(first + "\n")
         resampledMajority.map(it => it.mkString(",")).collect().foreach(x=> pw.write(x+"\n"))
     }
+
+    def printProbabilities(sc: SparkContext): Unit = {
+        // 0 diabetes, 1 highBP, 2 highChol, 3 cholCheck, 4 BMI, 5 Smoker, 6 Stroke, 7 heartDiseaseOrAttack, 8 PhysActivity,
+        // 9 fruits, 10 veggies, 11 hvyAlcConsum, 12 healthcare, 13 noDocbcCost, 14 genHlth, 15 menHlth, 16 physHlth,
+        // 17 diffWalk, 18 Sex, 19 Age, 20 Education, 21 income
+
+        println("High blood pressure on Diabetes Prevalence")
+        calculateProbabilities(sc, 1)
+
+        println("High cholesterol on Diabetes Prevalence")
+        calculateProbabilities(sc, 2)
+
+        println("BMI on Diabetes Prevalence")
+        calculateProbabilities(sc, 4)
+
+        println("Smoking Impact on Diabetes Prevalence")
+        calculateProbabilities(sc, 5)
+
+        println("Physical activity on Diabetes Prevalence")
+        calculateProbabilities(sc, 8)
+
+        println("Fruit Consumption Impact on Diabetes Prevalence")
+        calculateProbabilities(sc, 9)
+
+        println("Vegetable Consumption Impact on Diabetes Prevalence")
+        calculateProbabilities(sc, 10)
+
+        println("Heavy alcohol consumption on Diabetes Prevalence")
+        calculateProbabilities(sc, 11)
+
+        println("Available healthcare on Diabetes Prevalence")
+        calculateProbabilities(sc, 12)
+
+        println("General health 1-5 on Diabetes Prevalence")
+        calculateProbabilities(sc, 14)
+
+        println("Difficulty walking on Diabetes Prevalence")
+        calculateProbabilities(sc, 17)
+
+        println("Sex on Diabetes Prevalence")
+        calculateProbabilities(sc, 18)
+
+        println("Age on Diabetes Prevalence")
+        calculateProbabilities(sc, 19)
+
+        println("Education on Diabetes Prevalence")
+        calculateProbabilities(sc, 20)
+
+        println("Income on Diabetes Prevalence")
+        calculateProbabilities(sc, 21)
+    }
+
+  def calculateProbabilities(sc: SparkContext, factor: Int): Unit = {
+    val res = sc.textFile("data/diabetes_binary_5050split_health_indicators_BRFSS2015.csv")
+      .map(line => (line.split(",")(factor).toDouble, line.split(",")(0).toDouble))
+      .combineByKey(v => (v, 1),
+        (acc: (Double, Int), v) => (acc._1 + v, acc._2 + 1),
+        (acc1: (Double, Int), acc2: (Double, Int)) => (acc1._1 + acc2._1, acc1._2 + acc2._2))
+      .map({ case (key, value) => (key, value._1 / value._2) })
+      .map(line => (line._1, (math floor line._2 * 1000) / 1000)).collect().sortBy(_._1).foreach(line => println(line._1 + ": " + line._2 + " prevalence of diabetes"))
+
+      println()
+  }
 
 }

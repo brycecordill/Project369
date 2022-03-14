@@ -7,7 +7,7 @@ import org.apache.log4j.Level
 
 object App {
     // Used in getNeighbors
-    private val N = 5
+    private val N = 11
 
     //private val dataset = "/user/bcordill/input/data"
     private val dataset = "data/5050small.csv"

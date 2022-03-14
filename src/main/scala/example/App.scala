@@ -15,10 +15,11 @@ import scala.collection._
 
 object App {
     // Used in getNeighbors
-    private val N = 5
+    private val N = 11
 
     //private val dataset = "/user/bcordill/input/data"
     private val dataset = "data/5050small.csv"
+    //private val dataset = "src/main/sampleData"
 
     def computeDistance(row1: List[Double], row2: List[Double]): Double = {
         val distance = row1.zip(row2).map({case(x, y) => math.pow(x - y, 2)})
@@ -28,11 +29,11 @@ object App {
     def getNeighbors(train: RDD[(Long, (Double, List[Double]))], test: RDD[(Long, (Double, List[Double]))]) : RDD[(Long, Double)] ={
         //var allDistances = mutable.MutableList[()]
         val data = test.cartesian(train).map({case((i1, (tar1, l1)), (i2, (tar2, l2))) =>
-            (i1, (i2, computeDistance(l1, l2), tar1, tar2))
+            (i1, (i2, computeDistance(l1, l2), tar2))
         }).groupByKey().map({case(key, vals) =>
             (key, vals.toList)
         }).sortByKey().mapValues(x =>
-            x.sortBy(y => (y._2)).take(N)).mapValues(x => x.map({case(i2, dist, tar1, tar2) =>
+            x.sortBy(y => (y._2)).take(N)).mapValues(x => x.map({case(i2, dist, tar2) =>
             tar2})).mapValues(x =>
             x.groupBy(identity).mapValues(_.size).maxBy(_._2)._1)
         data
@@ -72,13 +73,10 @@ object App {
 
         // RDD Setup (change to commented out version when complete)
         val target = sc.textFile(dataset).filter(_ != first).map(line => line.split(",")(0).trim.toDouble)
-//        val target = sc.textFile("src/main/sampleData").map(line => line.split(",")(0).trim.toDouble)
         val testDiabetes = sc.textFile(dataset).filter(_ != first).map(line => {
             line.split(",").tail.map(item => item.trim.toDouble).toList
         })
-//        val testDiabetes = sc.textFile("src/main/sampleData").map(line => {
-//            line.split(",").tail.map(item => item.trim.toDouble).toList
-//        })
+
 
         // create list of tuples
         // sample row: (0,(0.0,List(1.0, 0.0, 1.0, 26.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 3.0, 5.0, 30.0, 0.0, 1.0, 4.0, 6.0, 8.0)))
@@ -90,19 +88,52 @@ object App {
         }
 
         // print out what data looks like before k nearest neighbors
+        println("Example data to be split into training and testing")
         data.take(5).foreach(println)
 
         // predicting whether they have diabetes based on other columns
         val actual = target.zipWithIndex().map(x => (x._2, x._1))
         val predicted = getNeighbors(training, test)
 
-        // print accuracy of k nearest neighbors
-        println(actual.join(predicted).filter({case (id, (act, pred)) => act == pred}).count.toDouble / test.count.toDouble)
+        // print accuracy of k nearest neighbors on all columns
+        println()
+        println("Accuracy using all factors: " + actual.join(predicted).filter({case (id, (act, pred)) => act == pred}).count.toDouble / test.count.toDouble)
+
+        // try on healthcare, sex, age, income, education (socioeconomic factors)
+        val non_health_factors = data.map({case(idx, (tar, l)) => (idx, (tar, List(l(11), l(17), l(18), l(19), l(20))))})
+        val (training2, test2) = non_health_factors.randomSplit(Array[Double](0.8, 0.2), 369) match {
+          case Array(training2, test2) => (training2, test2)
+        }
+        val actual2 = target.zipWithIndex().map(x => (x._2, x._1))
+        val predicted2 = getNeighbors(training2, test2)
+        println()
+        println("Accuracy using age, sex, income, healthcare (non health related factors): " + actual2.join(predicted2).filter({case (id, (act, pred)) => act == pred}).count.toDouble / test2.count.toDouble)
+
+        // try on health related factors only
+        // high bp, high chol, bmi, stroke, heart disease
+        val health_factors = data.map({case(idx, (tar, l)) => (idx, (tar, List(l(0), l(1), l(3), l(5), l(6))))})
+        val (training3, test3) = health_factors.randomSplit(Array[Double](0.8, 0.2), 369) match {
+          case Array(training3, test3) => (training3, test3)
+        }
+        val actual3 = target.zipWithIndex().map(x => (x._2, x._1))
+        val predicted3 = getNeighbors(training3, test3)
+        println()
+        println("Accuracy using high bp, high chol, bmi, stroke, heart disease: " + actual3.join(predicted3).filter({case (id, (act, pred)) => act == pred}).count.toDouble / test3.count.toDouble)
+
+        // try on significant factors determined by preliminary analysis
+        val sig_factors = data.map({case(idx, (tar, l)) => (idx, (tar, List(l(20), l(1), l(2), l(3), l(4), l(5), l(7), l(9))))})
+        val (training4, test4) = sig_factors.randomSplit(Array[Double](0.8, 0.2), 369) match {
+          case Array(training4, test4) => (training4, test4)
+        }
+        val actual4 = target.zipWithIndex().map(x => (x._2, x._1))
+        val predicted4 = getNeighbors(training4, test4)
+        println()
+        println("Accuracy using significant factors from preliminary analysis: " + actual4.join(predicted4).filter({case (id, (act, pred)) => act == pred}).count.toDouble / test4.count.toDouble)
 
         // Write out everything to an CSV (pointless at the moment)
-        val pw = new PrintWriter(new File("data/output.csv"))
-        pw.write(first + "\n")
-        resampledMajority.map(it => it.mkString(",")).collect().foreach(x=> pw.write(x+"\n"))
+        //val pw = new PrintWriter(new File("data/output.csv"))
+        //pw.write(first + "\n")
+        //resampledMajority.map(it => it.mkString(",")).collect().foreach(x=> pw.write(x+"\n"))
     }
 
     def printProbabilities(sc: SparkContext): Unit = {

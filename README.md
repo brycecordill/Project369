@@ -1,4 +1,4 @@
-Ishaan Karvir
-Bryce Cordill
-Ryan Shintaku
+Ishaan Karvir,
+Bryce Cordill,
+Ryan Shintaku, and
 Sam Wathen

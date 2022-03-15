@@ -4,6 +4,7 @@ March 08, 2022, All four of us met to discuss the project
 March 09, 2022, Ryan completed the KNN algorithm using original data set
 March 09, 2022, Sam began work on data visualization using original data set
 March 10, 2022, Bryce cleaned up KNN code and created (resampled) a smaller data set to run it on
+March 10, 2022, Sam finished preliminary analysis on variables in Scala
 March 10, 2022, All four of use began work on the final presentation
 March 11, 2022, Ishaan and Bryce finished data visualizations
 March 12, 2022, All four put finishing touches on the presentation
